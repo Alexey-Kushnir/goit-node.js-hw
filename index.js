@@ -1,14 +1,24 @@
-// const yargs = require("yargs");
-// const { hideBin } = require("yargs/helpers");
-const argv = require("yargs").argv;
-
+// const argv = require("yargs").argv;
+const { Command } = require("commander");
 const contacts = require("./contacts");
+
+const program = new Command();
+program
+  .option("-a, --action <type>", "choose action")
+  .option("-i, --id <type>", "user id")
+  .option("-n, --name <type>", "user name")
+  .option("-e, --email <type>", "user email")
+  .option("-p, --phone <type>", "user phone");
+
+program.parse(process.argv);
+
+const argv = program.opts();
 
 const invokeAction = async ({ action, id, name, email, phone }) => {
   switch (action) {
     case "list":
       const allContacts = await contacts.listContacts();
-      return console.log(allContacts);
+      return console.table(allContacts);
     case "get":
       const oneContact = await contacts.getContactById(id);
       return console.log(oneContact);
@@ -30,6 +40,4 @@ const invokeAction = async ({ action, id, name, email, phone }) => {
   }
 };
 
-// const arr = hideBin(process.argv);
-// const { argv } = yargs(arr);
 invokeAction(argv);
