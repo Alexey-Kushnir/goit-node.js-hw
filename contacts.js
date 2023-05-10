@@ -9,8 +9,12 @@ const updateContacts = async (contacts) =>
   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
 
 const listContacts = async () => {
-  const data = await fs.readFile(contactsPath);
-  return JSON.parse(data) || null;
+  try {
+    const data = await fs.readFile(contactsPath);
+    return JSON.parse(data) || null;
+  } catch (e) {
+    console.error(`Error reading contacts data: ${e}`);
+  }
 };
 
 const getContactById = async (id) => {
@@ -20,43 +24,55 @@ const getContactById = async (id) => {
     const result = contacts.find((c) => c.id === contactId);
     return result || null;
   } catch (e) {
-    console.error(`Error reading contacts data: ${e}`);
+    console.error(`Error reading contact data: ${e}`);
   }
 };
 
 const addContact = async (data) => {
-  const contacts = await listContacts();
-  const newContact = {
-    id: nanoid(),
-    ...data,
-  };
-  contacts.push(newContact);
-  await updateContacts(contacts);
-  return newContact;
+  try {
+    const contacts = await listContacts();
+    const newContact = {
+      id: nanoid(),
+      ...data,
+    };
+    contacts.push(newContact);
+    await updateContacts(contacts);
+    return newContact;
+  } catch (e) {
+    console.error(`Error writing contact's data: ${e}`);
+  }
 };
 
 const updateById = async (id, data) => {
-  const contactId = String(id);
-  const contacts = await listContacts();
-  const index = contacts.findIndex((i) => i.id === contactId);
-  if (index === -1) {
-    return null;
+  try {
+    const contactId = String(id);
+    const contacts = await listContacts();
+    const index = contacts.findIndex((i) => i.id === contactId);
+    if (index === -1) {
+      return null;
+    }
+    contacts[index] = { id, ...data };
+    await updateContacts(contacts);
+    return contacts[index];
+  } catch (e) {
+    console.error(`Error updating contact's data: ${e}`);
   }
-  contacts[index] = { id, ...data };
-  await updateContacts(contacts);
-  return contacts[index];
 };
 
 const removeContact = async (id) => {
-  const contactId = String(id);
-  const contacts = await listContacts();
-  const index = contacts.findIndex((i) => i.id === contactId);
-  if (index === -1) {
-    return null;
+  try {
+    const contactId = String(id);
+    const contacts = await listContacts();
+    const index = contacts.findIndex((i) => i.id === contactId);
+    if (index === -1) {
+      return null;
+    }
+    const [result] = contacts.splice(index, 1);
+    await updateContacts(contacts);
+    return result;
+  } catch (e) {
+    console.error(`Error removing contact: ${e}`);
   }
-  const [result] = contacts.splice(index, 1);
-  await updateContacts(contacts);
-  return result;
 };
 
 module.exports = {
